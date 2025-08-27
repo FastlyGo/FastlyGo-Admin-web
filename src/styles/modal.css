@@ -1,0 +1,152 @@
+/* Modern Modal Styles */
+@layer components {
+  /* Modal Overlay */
+  .modal-overlay {
+    @apply fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4;
+  }
+
+  /* Modal Container */
+  .modal-container {
+    @apply bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto;
+    animation: modalSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .modal-container-sm {
+    @apply max-w-lg;
+  }
+
+  .modal-container-lg {
+    @apply max-w-4xl;
+  }
+
+  /* Modal Header */
+  .modal-header {
+    @apply flex items-center justify-between px-8 py-6 border-b border-gray-100;
+  }
+
+  .modal-title {
+    @apply text-2xl font-bold text-gray-800 flex items-center gap-3;
+  }
+
+  .modal-title-icon {
+    @apply w-10 h-10 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center;
+  }
+
+  .modal-close-btn {
+    @apply w-10 h-10 hover:bg-gray-100 rounded-xl transition-colors flex items-center justify-center;
+  }
+
+  /* Modal Body */
+  .modal-body {
+    @apply px-8 pb-8;
+  }
+
+  /* Form Sections */
+  .form-section {
+    @apply space-y-6;
+  }
+
+  .form-section-title {
+    @apply text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2;
+  }
+
+  .form-section-divider {
+    @apply border-t pt-6;
+  }
+
+  /* Input Groups */
+  .input-group {
+    @apply space-y-2;
+  }
+
+  .input-label {
+    @apply block text-sm font-semibold text-gray-700;
+  }
+
+  .input-label-required::after {
+    content: " *";
+    @apply text-red-500;
+  }
+
+  /* Input Containers */
+  .input-container {
+    @apply relative;
+  }
+
+  .input-icon {
+    @apply absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400;
+  }
+
+  .input-icon-textarea {
+    @apply absolute left-4 top-4 w-5 h-5 text-gray-400;
+  }
+
+  /* Input Styles */
+  .form-input {
+    @apply w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-primary-500 focus:shadow-lg focus:shadow-primary-500/20 transition-all duration-200;
+  }
+
+  .form-input-no-icon {
+    @apply pl-4;
+  }
+
+  .form-input-error {
+    @apply border-red-300 focus:border-red-500 bg-red-50;
+  }
+
+  .form-select {
+    @apply appearance-none;
+  }
+
+  .form-textarea {
+    @apply resize-none;
+  }
+
+  /* Error Messages */
+  .form-error {
+    @apply mt-2 text-sm text-red-500 flex items-center gap-1;
+  }
+
+  .form-error-icon {
+    @apply w-4 h-4 rounded-full bg-red-500 text-white text-xs flex items-center justify-center;
+  }
+
+  /* Grid Layouts */
+  .form-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-6;
+  }
+
+  .form-grid-single {
+    @apply mt-6;
+  }
+
+  /* Modal Footer */
+  .modal-footer {
+    @apply flex gap-4 justify-end mt-8 pt-6 border-t border-gray-100;
+  }
+
+  /* Button Styles */
+  .btn-secondary {
+    @apply px-8 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-200 font-semibold;
+  }
+
+  .btn-primary {
+    @apply px-8 py-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-xl hover:from-primary-600 hover:to-primary-700 transition-all duration-200 font-semibold shadow-lg shadow-primary-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2;
+  }
+
+  .btn-loading-spinner {
+    @apply w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin;
+  }
+}
+
+/* Animations */
+@keyframes modalSlideIn {
+  from {
+    transform: translateY(-20px) scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
