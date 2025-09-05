@@ -78,23 +78,22 @@ const VehicleModal: React.FC<VehicleModalProps> = ({ isOpen, onClose, onSave, ve
         ...vehicle
       });
     } else {
-      // Test data
       setFormData({
         vehicleType: VehicleType.Motorcycle,
-        brand: 'Honda',
-        model: 'CB190R',
-        year: 2023,
-        plate: 'ABC-123',
-        capacityKg: 15.5,
-        avgSpeedKmh: 45.0,
-        fuelCostPerKm: 0.08,
+        brand: '',
+        model: '',
+        year: undefined,
+        plate: '',
+        capacityKg: 0,
+        avgSpeedKmh: 0,
+        fuelCostPerKm: 0,
         isAvailable: true,
         conditionStatus: 'good',
-        color: 'Red',
-        vinNumber: 'VIN123456789',
-        insuranceExpiry: '2025-12-31',
-        maintenanceDueDate: '2024-12-31',
-        notes: 'New motorcycle for delivery service'
+        color: '',
+        vinNumber: '',
+        insuranceExpiry: '',
+        maintenanceDueDate: '',
+        notes: ''
       });
     }
     setErrors({});

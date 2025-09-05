@@ -96,21 +96,20 @@ const VehicleAssignmentModal: React.FC<VehicleAssignmentModalProps> = ({ isOpen,
         returnedAt: assignment.returnedAt ? assignment.returnedAt.split('T')[0] : ''
       });
     } else {
-      // Test data
       setFormData({
-        deliveryPersonId: '550e8400-e29b-41d4-a716-446655440001',
-        vehicleId: '550e8400-e29b-41d4-a716-446655440001',
+        deliveryPersonId: '',
+        vehicleId: '',
         assignmentStatus: AssignmentStatus.Active,
-        assignedAt: '2024-01-15',
+        assignedAt: new Date().toISOString().split('T')[0],
         returnedAt: '',
-        assignmentReason: 'Regular delivery assignment for downtown coverage',
+        assignmentReason: '',
         returnReason: '',
-        comments: 'Initial assignment for new delivery person',
-        conditionAtAssignment: 'good',
+        comments: '',
+        conditionAtAssignment: '',
         conditionAtReturn: '',
-        mileageAtAssignment: 15000,
+        mileageAtAssignment: undefined,
         mileageAtReturn: undefined,
-        assignedBy: '550e8400-e29b-41d4-a716-446655440003',
+        assignedBy: '',
         returnedBy: ''
       });
     }
@@ -147,28 +146,44 @@ const VehicleAssignmentModal: React.FC<VehicleAssignmentModalProps> = ({ isOpen,
 
   const loadData = async () => {
     try {
-      // Mock data - in real app these would be API calls
-      setDeliveryPersons([
-        { id: '550e8400-e29b-41d4-a716-446655440001', name: 'Carlos Rodriguez', email: 'carlos@example.com' },
-        { id: '550e8400-e29b-41d4-a716-446655440002', name: 'Maria Garcia', email: 'maria@example.com' },
-        { id: '550e8400-e29b-41d4-a716-446655440003', name: 'Juan Martinez', email: 'juan@example.com' },
-        { id: '550e8400-e29b-41d4-a716-446655440004', name: 'Ana Lopez', email: 'ana@example.com' }
-      ]);
+      // Load delivery persons from users API (filtered by DeliveryPerson role)
+      const usersResponse = await apiService.getAllUsers();
+      if (usersResponse.success) {
+        const deliveryPersonsList = usersResponse.data
+          .filter(user => user.roles.includes('DeliveryPerson'))
+          .map(user => ({
+            id: user.id,
+            name: user.fullName,
+            email: user.email
+          }));
+        setDeliveryPersons(deliveryPersonsList);
 
-      setVehicles([
-        { id: '550e8400-e29b-41d4-a716-446655440001', brand: 'Honda', model: 'CB190R', plate: 'ABC-123', isAvailable: true },
-        { id: '550e8400-e29b-41d4-a716-446655440002', brand: 'Yamaha', model: 'XTZ150', plate: 'DEF-456', isAvailable: true },
-        { id: '550e8400-e29b-41d4-a716-446655440003', brand: 'Bajaj', model: 'Pulsar 180', plate: 'GHI-789', isAvailable: false },
-        { id: '550e8400-e29b-41d4-a716-446655440004', brand: 'TVS', model: 'Apache 160', plate: 'JKL-012', isAvailable: true }
-      ]);
+        // All users for assigned by / returned by dropdowns
+        const allUsers = usersResponse.data.map(user => ({
+          id: user.id,
+          name: user.fullName,
+          email: user.email
+        }));
+        setUsers(allUsers);
+      }
 
-      setUsers([
-        { id: '550e8400-e29b-41d4-a716-446655440001', name: 'Admin User', email: 'admin@fastlygo.com' },
-        { id: '550e8400-e29b-41d4-a716-446655440002', name: 'Manager López', email: 'manager@fastlygo.com' },
-        { id: '550e8400-e29b-41d4-a716-446655440003', name: 'Supervisor García', email: 'supervisor@fastlygo.com' }
-      ]);
+      // Load vehicles
+      const vehiclesResponse = await apiService.getAllVehicles();
+      if (vehiclesResponse.success) {
+        const vehiclesList = vehiclesResponse.data.map(vehicle => ({
+          id: vehicle.id,
+          brand: vehicle.brand || '',
+          model: vehicle.model || '',
+          plate: vehicle.plate,
+          isAvailable: vehicle.isAvailable || false
+        }));
+        setVehicles(vehiclesList);
+      }
     } catch (error) {
       console.error('Error loading data:', error);
+      setDeliveryPersons([]);
+      setVehicles([]);
+      setUsers([]);
     }
   };
 
@@ -216,9 +231,9 @@ const VehicleAssignmentModal: React.FC<VehicleAssignmentModalProps> = ({ isOpen,
     try {
       let response;
       if (assignment) {
-        response = await apiService.put(`/api/admin/VehicleAssignment/${assignment.id}`, formData);
+        response = await apiService.updateVehicleAssignment(assignment.id, formData);
       } else {
-        response = await apiService.post('/api/admin/VehicleAssignment', formData);
+        response = await apiService.createVehicleAssignment(formData);
       }
 
       if (response.success) {

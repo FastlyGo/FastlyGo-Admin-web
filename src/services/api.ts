@@ -686,6 +686,40 @@ export interface BusinessByTypeRequest {
   activeOnly?: boolean;
 }
 
+// Type definitions for User
+export interface User {
+  id: string;
+  fullName: string;
+  email: string;
+  phone?: string;
+  isActive: boolean;
+  roles: string[];
+  totalOrders?: number;
+  lastOrderDate?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+// User registration request interface
+export interface UserRegisterRequest {
+  productCode: string;
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber?: string;
+  planId: string;
+  profileImage?: File;
+}
+
+// User stats interface
+export interface UserStats {
+  totalUsers: number;
+  activeUsers: number;
+  pausedUsers: number;
+  pendingUsers: number;
+}
+
 class ApiService {
   private api: AxiosInstance;
   private readonly BASE_URL = 'https://localhost:7283';
@@ -965,6 +999,78 @@ class ApiService {
    */
   async getVehicleAssignmentStats(): Promise<ApiResponse<VehicleAssignmentStats>> {
     return this.get<VehicleAssignmentStats>('/api/admin/VehicleAssignment/stats');
+  }
+
+  // ==========================================
+  // MÉTODOS PARA USER ADMINISTRATION
+  // ==========================================
+
+  /**
+   * GET /api/admin/User
+   * Obtiene todos los usuarios
+   */
+  async getAllUsers(): Promise<ApiResponse<User[]>> {
+    return this.get<User[]>('/api/admin/User');
+  }
+
+  /**
+   * POST /api/Auth/register
+   * Registra un nuevo usuario
+   */
+  async registerUser(userData: UserRegisterRequest): Promise<ApiResponse<User>> {
+    const formData = new FormData();
+    formData.append('ProductCode', userData.productCode);
+    formData.append('Email', userData.email);
+    formData.append('Password', userData.password);
+    formData.append('FirstName', userData.firstName);
+    formData.append('LastName', userData.lastName);
+    if (userData.phoneNumber) {
+      formData.append('PhoneNumber', userData.phoneNumber);
+    }
+    formData.append('PlanId', userData.planId);
+    if (userData.profileImage) {
+      formData.append('ProfileImage', userData.profileImage);
+    }
+
+    return this.request<User>('/api/admin/User/register', {
+      method: 'POST',
+      data: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  }
+
+  /**
+   * GET /api/admin/User/{id}
+   * Obtiene un usuario específico por ID
+   */
+  async getUserById(id: string): Promise<ApiResponse<User>> {
+    return this.get<User>(`/api/admin/User/${id}`);
+  }
+
+  /**
+   * PUT /api/admin/User/{id}
+   * Actualiza un usuario específico
+   */
+  async updateUser(id: string, userData: Partial<User>): Promise<ApiResponse<User>> {
+    return this.put<User>(`/api/admin/User/${id}`, userData);
+  }
+
+  /**
+   * DELETE /api/admin/User/{id}
+   * Elimina un usuario específico
+   */
+  async deleteUser(id: string): Promise<ApiResponse<void>> {
+    return this.delete<void>(`/api/admin/User/${id}`);
+  }
+
+  /**
+   * GET /api/admin/User/stats
+   * Obtiene estadísticas de los usuarios
+   */
+  async getUserStats(): Promise<ApiResponse<UserStats>> {
+    return this.get<UserStats>('/api/admin/User/stats');
   }
 }
 

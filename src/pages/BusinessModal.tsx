@@ -36,8 +36,8 @@ const BusinessModal: React.FC<BusinessModalProps> = ({ isOpen, onClose, onSave, 
         description: business.description || '',
         address: business.address || '',
         isActive: business.isActive !== undefined ? business.isActive : true,
-        responsibleUserEmail: 'test@example.com',
-        responsibleUserRoles: ['Admin', 'Manager']
+        responsibleUserEmail: '',
+        responsibleUserRoles: []
       });
     } else {
       setFormData({
@@ -48,8 +48,8 @@ const BusinessModal: React.FC<BusinessModalProps> = ({ isOpen, onClose, onSave, 
         description: '',
         address: '',
         isActive: true,
-        responsibleUserEmail: 'test@example.com',
-        responsibleUserRoles: ['Admin', 'Manager']
+        responsibleUserEmail: '',
+        responsibleUserRoles: []
       });
     }
     setErrors({});
@@ -119,9 +119,9 @@ const BusinessModal: React.FC<BusinessModalProps> = ({ isOpen, onClose, onSave, 
 
       let response;
       if (business) {
-        response = await apiService.put(`/Business/${business.id}`, payload);
+        response = await apiService.updateBusiness(business.id, payload);
       } else {
-        response = await apiService.post('/Business', payload);
+        response = await apiService.post('/api/admin/Business', payload);
       }
 
       if (response.success) {
