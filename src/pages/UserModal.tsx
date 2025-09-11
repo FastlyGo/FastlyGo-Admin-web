@@ -28,12 +28,13 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, onSave, user }) 
   const [showPassword, setShowPassword] = useState(false);
 
   const availableRoleOptions = [
-    { value: 'Admin', label: 'Administrator' },
-    { value: 'Manager', label: 'Manager' },
-    { value: 'DeliveryPerson', label: 'Delivery Person' },
-    { value: 'Customer', label: 'Customer' },
-    { value: 'BusinessOwner', label: 'Business Owner' },
-    { value: 'Staff', label: 'Staff Member' }
+    { value: 'admin', label: 'Administrator' },
+    { value: 'customer', label: 'Customer' },
+    { value: 'delivery', label: 'Delivery Person' },
+    { value: 'merchant', label: 'Merchant' },
+    { value: 'admin_merchant', label: 'Admin Merchant' },
+    { value: 'support', label: 'Support' },
+    { value: 'delivery_manager', label: 'Delivery Manager' }
   ];
 
   useEffect(() => {
@@ -61,7 +62,7 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, onSave, user }) 
         planId: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
         profileImage: undefined
       });
-      setSelectedRoles(['Customer']);
+      setSelectedRoles(['customer']);
     }
     setErrors({});
   }, [user]);
@@ -148,7 +149,8 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, onSave, user }) 
       } else {
         const registrationData = {
           ...formData,
-          phoneNumber: formData.phoneNumber?.replace(/\D/g, '') || ''
+          phoneNumber: formData.phoneNumber?.replace(/\D/g, '') || '',
+          roles: selectedRoles
         };
         response = await apiService.registerUser(registrationData);
       }

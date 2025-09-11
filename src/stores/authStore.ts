@@ -22,7 +22,7 @@ interface AuthState {
 // Tipos para las acciones
 interface AuthActions {
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string, lastName?: string, phoneNumber?: string) => Promise<void>;
   logout: () => void;
   clearError: () => void;
   setLoading: (loading: boolean) => void;
@@ -32,7 +32,7 @@ interface AuthActions {
 type AuthStore = AuthState & AuthActions;
 
 // Configuración de axios
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://localhost:7283';
 
 // Instancia de axios con interceptores
 const api = axios.create({
@@ -78,42 +78,14 @@ export const useAuthStore = create<AuthStore>()(
         set({ isLoading: true, error: null });
         
         try {
-          // SIMULACIÓN DE LOGIN - Para pruebas
-          // Comentar las siguientes líneas para usar el backend real
-          await new Promise(resolve => setTimeout(resolve, 1000)); // Simular delay
-          
-          // Datos simulados de usuario
-          const mockUser = {
-            id: '1',
-            email: email,
-            name: 'Manuel Perez',
-            role: 'admin'
-          };
-          
-          // Usar password para validación básica (opcional)
-          if (password.length < 3) {
-            throw new Error('Contraseña muy corta');
-          }
-          
-          const mockToken = 'mock-jwt-token-' + Date.now();
-          
-          // Guardar token en localStorage
-          localStorage.setItem('auth-token', mockToken);
-          
-          set({
-            user: mockUser,
-            token: mockToken,
-            isAuthenticated: true,
-            isLoading: false,
-            error: null,
-          });
-          
-          // DESCOMENTAR LAS SIGUIENTES LÍNEAS PARA USAR EL BACKEND REAL
-          /*
-          const response = await api.post('/auth/login', {
+          const response = await api.post('/api/Auth/login', {
             email,
             password,
           });
+
+          if (!response.data.success) {
+            throw new Error(response.data.message || 'Error al iniciar sesión');
+          }
 
           const { user, token } = response.data;
           
@@ -127,26 +99,38 @@ export const useAuthStore = create<AuthStore>()(
             isLoading: false,
             error: null,
           });
-          */
-        } catch (error: unknown) {
-          const errorMessage = error instanceof Error ? error.message : 'Error al iniciar sesión';
+        } catch (error: any) {
+          let errorMessage = 'Error al iniciar sesión';
+          
+          if (error.response?.data?.message) {
+            errorMessage = error.response.data.message;
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
+          
           set({
             isLoading: false,
             error: errorMessage,
           });
-          throw error;
+          throw new Error(errorMessage);
         }
       },
 
-      register: async (name: string, email: string, password: string) => {
+      register: async (name: string, email: string, password: string, lastName?: string, phoneNumber?: string) => {
         set({ isLoading: true, error: null });
         
         try {
-          const response = await api.post('/auth/register', {
+          const response = await api.post('/api/Auth/register', {
             name,
             email,
             password,
+            lastName,
+            phoneNumber,
           });
+
+          if (!response.data.success) {
+            throw new Error(response.data.message || 'Error al registrarse');
+          }
 
           const { user, token } = response.data;
           
@@ -160,13 +144,20 @@ export const useAuthStore = create<AuthStore>()(
             isLoading: false,
             error: null,
           });
-        } catch (error: unknown) {
-          const errorMessage = error instanceof Error ? error.message : 'Error al registrarse';
+        } catch (error: any) {
+          let errorMessage = 'Error al registrarse';
+          
+          if (error.response?.data?.message) {
+            errorMessage = error.response.data.message;
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
+          
           set({
             isLoading: false,
             error: errorMessage,
           });
-          throw error;
+          throw new Error(errorMessage);
         }
       },
 

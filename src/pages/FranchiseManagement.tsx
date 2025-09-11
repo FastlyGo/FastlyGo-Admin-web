@@ -616,6 +616,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, Search, Plus, Edit2, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useBusinessStore } from '../stores/businessStore';
+import { CreateBusinessModal } from '../components/CreateBusinessModal';
 import { apiService } from '../services/api';
 import type { Business as ApiBusiness, Vehicle, VehicleAssignment } from '../services/api';
 import type { Business as ModalBusiness } from '../types/business';
@@ -651,14 +653,25 @@ const FranchiseManagement: React.FC = () => {
   
   const [activeTab, setActiveTab] = useState<TabType>('franchise');
   
-  // Business states
-  const [businesses, setBusinesses] = useState<ApiBusiness[]>([]);
+  // Business store integration
+  const { 
+    businesses, 
+    loading: businessLoading, 
+    error: businessError, 
+    fetchBusinesses, 
+    deleteBusiness,
+    clearError 
+  } = useBusinessStore();
+  
   const [filteredBusinesses, setFilteredBusinesses] = useState<ApiBusiness[]>([]);
   const [businessStats, setBusinessStats] = useState<LocalBusinessStats>({
     activeBusinesses: 0,
     inactiveBusinesses: 0,
     suspendedBusinesses: 0
   });
+  
+  // Modal state for CreateBusinessModal
+  const [isCreateBusinessModalOpen, setIsCreateBusinessModalOpen] = useState(false);
   
   // Vehicle states
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -690,6 +703,9 @@ const FranchiseManagement: React.FC = () => {
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [editingDelivery, setEditingDelivery] = useState(null);
   const [editingAssignment, setEditingAssignment] = useState<VehicleAssignment | null>(null);
+  
+  // Delete confirmation state
+  const [deleteBusinessId, setDeleteBusinessId] = useState<string | null>(null);
 
   const itemsPerPage = 10;
 
@@ -741,46 +757,10 @@ const FranchiseManagement: React.FC = () => {
   }, [searchTerm, assignments]);
 
   const loadBusinesses = async () => {
-    setIsLoading(true);
     try {
-      console.log('Loading businesses...');
-      
-      if (typeof apiService.get !== 'function') {
-        console.error('get method not available on apiService');
-        throw new Error('get method not found on apiService');
-      }
-      
-      const response = await apiService.get<ApiBusiness[]>('/api/admin/Business', { activeOnly: false });
-      
-      console.log('API Response:', response);
-      
-      if (response.success && response.data) {
-        setBusinesses(response.data);
-        setFilteredBusinesses(response.data);
-        
-        // Calcular estadísticas simples desde los datos
-        const activeCount = response.data.filter(b => b.isActive).length;
-        const inactiveCount = response.data.filter(b => !b.isActive).length;
-        
-        setBusinessStats({
-          activeBusinesses: activeCount,
-          inactiveBusinesses: inactiveCount,
-          suspendedBusinesses: 0
-        });
-        
-        console.log('Businesses loaded successfully:', response.data.length);
-      } else {
-        console.error('API response not successful:', response);
-        setBusinesses([]);
-        setFilteredBusinesses([]);
-      }
+      await fetchBusinesses();
     } catch (error) {
       console.error('Error loading businesses:', error);
-      setBusinesses([]);
-      setFilteredBusinesses([]);
-      alert(`Error loading businesses: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -884,6 +864,19 @@ const FranchiseManagement: React.FC = () => {
     }
   }, [activeTab]);
 
+  // Update business stats when businesses change
+  useEffect(() => {
+    const activeCount = businesses.filter(b => b.isActive).length;
+    const inactiveCount = businesses.filter(b => !b.isActive).length;
+    
+    setBusinessStats({
+      activeBusinesses: activeCount,
+      inactiveBusinesses: inactiveCount,
+      suspendedBusinesses: 0
+    });
+    setFilteredBusinesses(businesses);
+  }, [businesses]);
+
   useEffect(() => {
     if (activeTab === 'franchise') {
       filterBusinesses();
@@ -893,6 +886,14 @@ const FranchiseManagement: React.FC = () => {
       filterAssignments();
     }
   }, [filterBusinesses, filterVehicles, filterAssignments, activeTab]);
+
+  // Clear business error after 5 seconds
+  useEffect(() => {
+    if (businessError) {
+      const timer = setTimeout(() => clearError(), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [businessError, clearError]);
 
   const handleEdit = (business: ApiBusiness) => {
     console.log('Editing business:', business);
@@ -960,6 +961,16 @@ const FranchiseManagement: React.FC = () => {
     console.log('Assignment saved, reloading data...');
     await loadAssignments();
     handleAssignmentModalClose();
+  };
+
+  // Handle business deletion
+  const handleDeleteBusiness = async (businessId: string) => {
+    try {
+      await deleteBusiness(businessId);
+      setDeleteBusinessId(null);
+    } catch (error) {
+      console.error('Error deleting business:', error);
+    }
   };
 
   // Función que usa businessTypeName si está disponible
@@ -1078,6 +1089,34 @@ const FranchiseManagement: React.FC = () => {
         </div>
       </div>
 
+      {/* Error Alert */}
+      {businessError && (
+        <div className="mx-6 mt-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm">{businessError}</p>
+            </div>
+            <div className="ml-auto pl-3">
+              <div className="-mx-1.5 -my-1.5">
+                <button
+                  onClick={clearError}
+                  className="inline-flex bg-red-50 rounded-md p-1.5 text-red-500 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-red-50 focus:ring-red-600"
+                >
+                  <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-6">
         {activeTab === 'franchise' ? (
@@ -1181,7 +1220,7 @@ const FranchiseManagement: React.FC = () => {
           <button
             onClick={() => {
               if (activeTab === 'franchise') {
-                setIsBusinessModalOpen(true);
+                setIsCreateBusinessModalOpen(true);
               } else if (activeTab === 'vehicles') {
                 setIsVehicleModalOpen(true);
               } else if (activeTab === 'delivery') {
@@ -1280,7 +1319,7 @@ const FranchiseManagement: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {isLoading ? (
+              {(isLoading || businessLoading) ? (
                 <tr>
                   <td colSpan={8} className="text-center py-8 text-gray-500">
                     Loading {activeTab}...
@@ -1331,9 +1370,8 @@ const FranchiseManagement: React.FC = () => {
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => console.log('Delete functionality removed')}
-                          className="p-2 bg-gray-400 text-white rounded cursor-not-allowed"
-                          disabled
+                          onClick={() => setDeleteBusinessId(business.id)}
+                          className="p-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -1488,6 +1526,15 @@ const FranchiseManagement: React.FC = () => {
         business={editingBusiness}
       />
       
+      <CreateBusinessModal
+        isOpen={isCreateBusinessModalOpen}
+        onClose={() => setIsCreateBusinessModalOpen(false)}
+        onBusinessCreated={() => {
+          loadBusinesses();
+          setIsCreateBusinessModalOpen(false);
+        }}
+      />
+      
       <VehicleModal
         isOpen={isVehicleModalOpen}
         onClose={handleVehicleModalClose}
@@ -1508,6 +1555,32 @@ const FranchiseManagement: React.FC = () => {
         onSave={handleAssignmentModalSave}
         assignment={editingAssignment}
       />
+      
+      {/* Delete Business Confirmation Modal */}
+      {deleteBusinessId && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">Confirm Deletion</h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete this business? This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteBusinessId(null)}
+                className="flex-1 bg-gray-200 text-gray-800 hover:bg-gray-300 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDeleteBusiness(deleteBusinessId)}
+                className="flex-1 bg-red-500 text-white hover:bg-red-600 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -5,8 +5,10 @@ import { ThemeToggle } from '../components/ThemeToggle';
 import logo from '../assets/images/logo.png';
 
 export const Register = () => {
-  const [username, setUserName] = useState('');
+  const [name, setName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
@@ -27,11 +29,10 @@ export const Register = () => {
     setIsLoading(true);
 
     try {
-      await register(username, email, password);
-      navigate('/dashboard');
-    } catch (err) {
-      setError('Error al crear la cuenta');
-      console.log(err);
+      await register(name, email, password, lastName || undefined, phoneNumber || undefined);
+      navigate('/');
+    } catch (err: any) {
+      setError(err.message || 'Error al crear la cuenta');
     } finally {
       setIsLoading(false);
     }
@@ -68,25 +69,41 @@ export const Register = () => {
           <div className="bg-card text-card-foreground rounded-lg border shadow-sm p-6">
             <div className="space-y-4">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-foreground">
-                  Username
+                <label htmlFor="name" className="block text-sm font-medium text-foreground">
+                  Nombre *
                 </label>
                 <input
-                  id="username"
-                  name="username"
+                  id="name"
+                  name="name"
                   type="text"
-                  autoComplete="username"
+                  autoComplete="given-name"
                   required
-                  value={username}
-                  onChange={(e) => setUserName(e.target.value)}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  placeholder="username"
+                  placeholder="Tu nombre"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="lastName" className="block text-sm font-medium text-foreground">
+                  Apellido
+                </label>
+                <input
+                  id="lastName"
+                  name="lastName"
+                  type="text"
+                  autoComplete="family-name"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  placeholder="Tu apellido (opcional)"
                 />
               </div>
 
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-foreground">
-                  Correo Electrónico
+                  Correo Electrónico *
                 </label>
                 <input
                   id="email"
@@ -98,6 +115,22 @@ export const Register = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   placeholder="tu@email.com"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="phoneNumber" className="block text-sm font-medium text-foreground">
+                  Teléfono
+                </label>
+                <input
+                  id="phoneNumber"
+                  name="phoneNumber"
+                  type="tel"
+                  autoComplete="tel"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  placeholder="+1 (555) 000-0000 (opcional)"
                 />
               </div>
 

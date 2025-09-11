@@ -1,11 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Users, UserCheck, UserX, Clock, Mail, Phone, MoreVertical, Edit, Trash2, Eye } from 'lucide-react';
+import { Search, Plus, Users, UserCheck, UserX, Clock, Mail, Phone, MoreVertical, Edit, Trash2, Eye, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
 import { apiService } from '../services/api';
-import type { User, UserStats } from '../services/api';
+import type { User, UserStats, PaginatedResponse } from '../services/api';
 import UserModal from './UserModal';
 
 export const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
+  const [allUsers, setAllUsers] = useState<User[]>([]); // Store all users for client-side pagination
+  const [isClientSidePagination, setIsClientSidePagination] = useState(false);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    pageSize: 10,
+    totalCount: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPreviousPage: false
+  });
   const [stats, setStats] = useState<UserStats>({
     totalUsers: 0,
     activeUsers: 0,
@@ -13,22 +23,81 @@ export const UserManagement = () => {
     pendingUsers: 0
   });
   const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
   useEffect(() => {
-    loadUsers();
-    loadStats();
-  }, []);
+    if (isClientSidePagination && allUsers.length > 0) {
+      // For client-side pagination, just recompute the displayed users
+      applyClientSideFiltering();
+    } else {
+      // For server-side pagination or initial load
+      loadUsers();
+    }
+    if (pagination.page === 1) {
+      loadStats();
+    }
+  }, [pagination.page, searchTerm, roleFilter]);
 
   const loadUsers = async () => {
     try {
       setIsLoading(true);
-      const response = await apiService.getAllUsers();
+      const response = await apiService.getAllUsers({
+        page: pagination.page,
+        pageSize: pagination.pageSize,
+        search: searchTerm || undefined,
+        role: roleFilter || undefined
+      });
+      console.log('🔍 User API Response:', response);
       if (response.success) {
-        setUsers(response.data);
+        // Check if response.data is a paginated response or direct array
+        if (Array.isArray(response.data)) {
+          // Backend doesn't support pagination yet, handle as simple array
+          console.log('📝 API returned direct array, implementing client-side pagination');
+          
+          // Apply client-side filtering
+          const filteredUsers = response.data.filter((user: User) => {
+            const matchesSearch = searchTerm === '' || 
+              user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              user.phone?.toLowerCase().includes(searchTerm.toLowerCase());
+            
+            const matchesRole = roleFilter === '' || user.roles.includes(roleFilter);
+            
+            return matchesSearch && matchesRole;
+          });
+          
+          // Apply client-side pagination
+          const startIndex = (pagination.page - 1) * pagination.pageSize;
+          const endIndex = startIndex + pagination.pageSize;
+          const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+          
+          setUsers(paginatedUsers);
+          setPagination(prev => ({
+            ...prev,
+            totalCount: filteredUsers.length,
+            totalPages: Math.ceil(filteredUsers.length / pagination.pageSize),
+            hasNextPage: endIndex < filteredUsers.length,
+            hasPreviousPage: pagination.page > 1
+          }));
+        } else {
+          // Backend supports pagination, use server response
+          console.log('📝 API returned paginated response');
+          setUsers(response.data.data);
+          setPagination(prev => ({
+            ...prev,
+            totalCount: response.data.totalCount,
+            totalPages: response.data.totalPages,
+            hasNextPage: response.data.hasNextPage,
+            hasPreviousPage: response.data.hasPreviousPage
+          }));
+        }
+      } else {
+        console.warn('⚠️ API returned success: false', response);
+        setUsers([]);
       }
     } catch (error) {
       console.error('Error loading users:', error);
@@ -49,11 +118,23 @@ export const UserManagement = () => {
     }
   };
 
-  const filteredUsers = users.filter(user =>
-    user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.phone?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    setPagination(prev => ({ ...prev, page: 1 }));
+  };
+
+  const handleRoleFilter = (value: string) => {
+    setRoleFilter(value);
+    setPagination(prev => ({ ...prev, page: 1 }));
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setPagination(prev => ({ ...prev, page: newPage }));
+  };
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPagination(prev => ({ ...prev, page: 1, pageSize: newPageSize }));
+  };
 
   const handleAddUser = () => {
     setSelectedUser(null);
@@ -95,12 +176,13 @@ export const UserManagement = () => {
 
   const getRoleColor = (role: string) => {
     const colors = {
-      'Admin': 'bg-red-100 text-red-800',
-      'Manager': 'bg-purple-100 text-purple-800',
-      'DeliveryPerson': 'bg-blue-100 text-blue-800',
-      'Customer': 'bg-green-100 text-green-800',
-      'BusinessOwner': 'bg-yellow-100 text-yellow-800',
-      'Staff': 'bg-gray-100 text-gray-800'
+      'admin': 'bg-red-100 text-red-800',
+      'customer': 'bg-green-100 text-green-800',
+      'delivery': 'bg-blue-100 text-blue-800',
+      'merchant': 'bg-purple-100 text-purple-800',
+      'admin_merchant': 'bg-orange-100 text-orange-800',
+      'support': 'bg-indigo-100 text-indigo-800',
+      'delivery_manager': 'bg-teal-100 text-teal-800'
     };
     return colors[role as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
@@ -123,16 +205,35 @@ export const UserManagement = () => {
           </button>
         </div>
 
-        {/* Search Bar */}
-        <div className="relative mb-6">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search users by name, email, or phone..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 focus:shadow-lg focus:shadow-teal-500/20 transition-all duration-200"
-          />
+        {/* Search and Filter Bar */}
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="relative flex-1">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search users by name, email, or phone..."
+              value={searchTerm}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 focus:shadow-lg focus:shadow-teal-500/20 transition-all duration-200"
+            />
+          </div>
+          <div className="relative">
+            <Filter className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <select
+              value={roleFilter}
+              onChange={(e) => handleRoleFilter(e.target.value)}
+              className="pl-12 pr-8 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-teal-500 focus:shadow-lg focus:shadow-teal-500/20 transition-all duration-200 bg-white text-gray-900 min-w-[200px]"
+            >
+              <option value="">All Roles</option>
+              <option value="admin">Administrator</option>
+              <option value="merchant">Merchant</option>
+              <option value="admin_merchant">Admin Merchant</option>
+              <option value="delivery_manager">Delivery Manager</option>
+              <option value="delivery">Delivery Person</option>
+              <option value="customer">Customer</option>
+              <option value="support">Support</option>
+            </select>
+          </div>
         </div>
 
         {/* Stats Cards */}
@@ -219,17 +320,17 @@ export const UserManagement = () => {
                       </div>
                     </td>
                   </tr>
-                ) : filteredUsers.length === 0 ? (
+                ) : users.length === 0 ? (
                   <tr>
                     <td colSpan={9} className="px-6 py-12 text-center text-gray-500">
                       No users found
                     </td>
                   </tr>
                 ) : (
-                  filteredUsers.map((user, index) => (
+                  users.map((user, index) => (
                     <tr key={user.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {index + 1}
+                        {(pagination.page - 1) * pagination.pageSize + index + 1}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-3">
@@ -316,6 +417,77 @@ export const UserManagement = () => {
               </tbody>
             </table>
           </div>
+          
+          {/* Pagination */}
+          {!isLoading && users.length > 0 && (
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="text-sm text-gray-600">
+                    Showing {(pagination.page - 1) * pagination.pageSize + 1} to{' '}
+                    {Math.min(pagination.page * pagination.pageSize, pagination.totalCount)} of{' '}
+                    {pagination.totalCount} users
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-600">Show:</span>
+                    <select
+                      value={pagination.pageSize}
+                      onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                      className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    >
+                      <option value={5}>5</option>
+                      <option value={10}>10</option>
+                      <option value={25}>25</option>
+                      <option value={50}>50</option>
+                    </select>
+                    <span className="text-sm text-gray-600">per page</span>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handlePageChange(pagination.page - 1)}
+                    disabled={!pagination.hasPreviousPage}
+                    className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    Previous
+                  </button>
+                  
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                      const startPage = Math.max(1, pagination.page - 2);
+                      const pageNumber = startPage + i;
+                      if (pageNumber > pagination.totalPages) return null;
+                      
+                      return (
+                        <button
+                          key={pageNumber}
+                          onClick={() => handlePageChange(pageNumber)}
+                          className={`px-3 py-2 text-sm font-medium rounded-md ${
+                            pageNumber === pagination.page
+                              ? 'bg-teal-500 text-white'
+                              : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          {pageNumber}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  
+                  <button
+                    onClick={() => handlePageChange(pagination.page + 1)}
+                    disabled={!pagination.hasNextPage}
+                    className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

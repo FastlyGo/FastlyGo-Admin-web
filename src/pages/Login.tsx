@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../stores/authStore";
 import { ThemeToggle } from "../components/ThemeToggle";
 import logo from "../assets/images/logo.png";
@@ -46,10 +46,10 @@ export const Login = () => {
           />
           <div>
             <h2 className="mt-6 text-center text-3xl font-extrabold text-foreground">
-              Iniciar Sesión
+              Panel de Administración
             </h2>
             <p className="mt-2 text-center text-sm text-muted-foreground">
-              Accede a tu cuenta de FastlyGo Admin
+              Acceso exclusivo para administradores
             </p>
           </div>
           <ThemeToggle />
@@ -116,14 +116,8 @@ export const Login = () => {
           </div>
 
           <div className="text-center">
-            <p className="text-sm text-muted-foreground">
-              ¿No tienes una cuenta?{" "}
-              <Link
-                to="/auth/register"
-                className="font-medium text-primary hover:text-primary/80 transition-colors"
-              >
-                Regístrate aquí
-              </Link>
+            <p className="text-xs text-muted-foreground">
+              Solo usuarios autorizados pueden acceder al panel administrativo
             </p>
           </div>
         </form>

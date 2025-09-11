@@ -16,23 +16,21 @@ export const Home = () => {
             <span className="text-primary">FastlyGo Admin</span>
           </h1>
           <p className="mt-3 max-w-md mx-auto text-base text-muted-foreground sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
-            Sistema de administración FastlyGo.
+            Panel de administración exclusivo para personal autorizado.
           </p>
           
-          <div className="mt-10 flex justify-center space-x-4">
+          <div className="mt-10 flex justify-center">
             <Link
               to="/auth/login"
-              className="bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-3 rounded-md text-base font-medium transition-colors"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-3 rounded-md text-base font-medium transition-colors"
             >
-              Iniciar Sesión
-            </Link>
-            <Link
-              to="/auth/register"
-              className="bg-secondary text-secondary-foreground hover:bg-secondary/80 px-6 py-3 rounded-md text-base font-medium transition-colors"
-            >
-              Registrarse
+              Acceder al Panel
             </Link>
           </div>
+          
+          <p className="mt-4 text-sm text-muted-foreground">
+            Solo usuarios autorizados pueden acceder al sistema administrativo
+          </p>
 
           {/* Características */}
           <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">

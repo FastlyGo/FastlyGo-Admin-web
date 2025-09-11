@@ -459,10 +459,17 @@ export interface Business {
   businessType: number;
   businessTypeName?: string;
   description: string;
-  address: string;
+  logoUrl?: string;
+  coverUrl?: string;
+  website?: string;
+  taxId?: string;
   isActive: boolean;
   responsibleUserName?: string;
+  statusName?: string;
+  statusId?: number;
+  userId?: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 // Type definitions for Vehicle
@@ -686,6 +693,22 @@ export interface BusinessByTypeRequest {
   activeOnly?: boolean;
 }
 
+// Business creation request interface
+export interface CreateBusinessRequest {
+  name: string;
+  description: string;
+  email: string;
+  phone: string;
+  website: string;
+  taxId: string;
+  businessType: number;
+  userId: string;
+  statusId?: number;
+  logoUrl?: string;
+  coverUrl?: string;
+  cloudinaryPublicId?: string;
+}
+
 // Type definitions for User
 export interface User {
   id: string;
@@ -695,9 +718,17 @@ export interface User {
   isActive: boolean;
   roles: string[];
   totalOrders?: number;
-  lastOrderDate?: string;
+  lastOrderDate?: string | null;
   createdAt: string;
   updatedAt?: string;
+}
+
+// Type definition for Merchant Users
+export interface MerchantUser {
+  id: string;
+  fullName: string;
+  email: string;
+  phone?: string;
 }
 
 // User registration request interface
@@ -710,6 +741,7 @@ export interface UserRegisterRequest {
   phoneNumber?: string;
   planId: string;
   profileImage?: File;
+  roles?: string[];
 }
 
 // User stats interface
@@ -720,9 +752,27 @@ export interface UserStats {
   pendingUsers: number;
 }
 
+// Pagination interfaces
+export interface PaginationParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  role?: string;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
 class ApiService {
   private api: AxiosInstance;
-  private readonly BASE_URL = 'https://localhost:7283';
+  private readonly BASE_URL = import.meta.env.VITE_API_URL || 'https://localhost:7283';
 
   constructor() {
     this.api = axios.create({
@@ -741,6 +791,13 @@ class ApiService {
     this.api.interceptors.request.use(
       (config) => {
         console.log('🚀 Request:', config.method?.toUpperCase(), config.url);
+        
+        // Obtener token del localStorage
+        const token = localStorage.getItem('auth-token');
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        
         return config;
       },
       (error) => {
@@ -753,10 +810,19 @@ class ApiService {
     this.api.interceptors.response.use(
       (response: AxiosResponse) => {
         console.log('✅ Response:', response.status, response.config.url);
+        console.log('📊 Response Data:', response.data);
         return response;
       },
       (error) => {
         console.error('❌ Response Error:', error.response?.status, error.response?.data);
+        console.error('❌ Full Error:', error);
+        
+        // Si hay error 401, limpiar token y redirigir al login
+        if (error.response?.status === 401) {
+          localStorage.removeItem('auth-token');
+          window.location.href = '/login';
+        }
+        
         return Promise.reject(error);
       }
     );
@@ -820,6 +886,14 @@ class ApiService {
    */
   async getAllBusinesses(params?: { activeOnly?: boolean }): Promise<ApiResponse<Business[]>> {
     return this.get<Business[]>('/api/admin/Business', params);
+  }
+
+  /**
+   * POST /api/admin/Business
+   * Crea un nuevo business
+   */
+  async createBusiness(businessData: CreateBusinessRequest): Promise<ApiResponse<Business>> {
+    return this.post<Business>('/api/admin/Business', businessData);
   }
 
   /**
@@ -1007,14 +1081,14 @@ class ApiService {
 
   /**
    * GET /api/admin/User
-   * Obtiene todos los usuarios
+   * Obtiene todos los usuarios con paginación
    */
-  async getAllUsers(): Promise<ApiResponse<User[]>> {
-    return this.get<User[]>('/api/admin/User');
+  async getAllUsers(params?: PaginationParams): Promise<ApiResponse<PaginatedResponse<User> | User[]>> {
+    return this.get<PaginatedResponse<User> | User[]>('/api/admin/User', params);
   }
 
   /**
-   * POST /api/Auth/register
+   * POST /api/admin/User
    * Registra un nuevo usuario
    */
   async registerUser(userData: UserRegisterRequest): Promise<ApiResponse<User>> {
@@ -1030,6 +1104,11 @@ class ApiService {
     formData.append('PlanId', userData.planId);
     if (userData.profileImage) {
       formData.append('ProfileImage', userData.profileImage);
+    }
+    if (userData.roles && userData.roles.length > 0) {
+      userData.roles.forEach((role, index) => {
+        formData.append(`Roles[${index}]`, role);
+      });
     }
 
     return this.request<User>('/api/admin/User/register', {
@@ -1072,7 +1151,24 @@ class ApiService {
   async getUserStats(): Promise<ApiResponse<UserStats>> {
     return this.get<UserStats>('/api/admin/User/stats');
   }
+
+  /**
+   * GET /api/admin/User/merchants
+   * Obtiene usuarios con roles merchant y admin_merchant
+   */
+  async getMerchantUsers(): Promise<ApiResponse<MerchantUser[]>> {
+    return this.get<MerchantUser[]>('/api/admin/User/merchants');
+  }
 }
 
 // Instancia singleton del servicio
 export const apiService = new ApiService();
+
+// Aliases para compatibilidad con el businessStore
+export const api = {
+  getBusinesses: (activeOnly?: boolean) => apiService.getAllBusinesses({ activeOnly }),
+  getBusiness: (id: string) => apiService.getBusinessById(id),
+  createBusiness: (businessData: CreateBusinessRequest) => apiService.createBusiness(businessData),
+  updateBusiness: (id: string, businessData: Partial<CreateBusinessRequest>) => apiService.updateBusiness(id, businessData),
+  deleteBusiness: (id: string) => apiService.deleteBusiness(id),
+};

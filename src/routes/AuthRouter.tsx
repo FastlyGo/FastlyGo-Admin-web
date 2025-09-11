@@ -1,7 +1,6 @@
 import { Route } from 'react-router-dom'
 import { Routes } from "react-router-dom";
 import { Login } from "../pages/Login";
-import { Register } from "../pages/Register";
 import { Home } from '../pages/Home';
 
 export const AuthRouter = () => {
@@ -9,7 +8,7 @@ export const AuthRouter = () => {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="login" element={<Login />} />
-      <Route path="register" element={<Register />} />
+      {/* Ruta de registro eliminada - solo admins existentes pueden acceder */}
     </Routes>
   );
 };
