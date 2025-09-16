@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ThemeToggle } from '../components/ThemeToggle';
+import { Shield, Settings, Zap } from 'lucide-react';
 
 export const Home = () => {
   return (
@@ -36,7 +37,7 @@ export const Home = () => {
           <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
             <div className="bg-dashboard-card text-dashboard-card-foreground hover:bg-dashboard-card/90 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 p-6 border border-border">
               <div className="w-12 h-12 bg-dashboard-card-foreground/20 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">🔐</span>
+                <Shield className="w-6 h-6 text-dashboard-card-foreground/80" />
               </div>
               <h3 className="text-lg font-medium text-dashboard-card-foreground mb-2">Administracion de Negocios de la aplicación</h3>
               <p className="text-dashboard-card-foreground/90">
@@ -46,7 +47,7 @@ export const Home = () => {
 
             <div className="bg-dashboard-card text-dashboard-card-foreground hover:bg-dashboard-card/90 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 p-6 border border-border">
               <div className="w-12 h-12 bg-dashboard-card-foreground/20 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">⚙️</span>
+                <Settings className="w-6 h-6 text-dashboard-card-foreground/80" />
               </div>
               <h3 className="text-lg font-medium text-dashboard-card-foreground mb-2">Gestión de Usuarios</h3>
               <p className="text-dashboard-card-foreground/90">
@@ -56,7 +57,7 @@ export const Home = () => {
 
             <div className="bg-dashboard-card text-dashboard-card-foreground hover:bg-dashboard-card/90 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 p-6 border border-border">
               <div className="w-12 h-12 bg-dashboard-card-foreground/20 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">⚡</span>
+                <Zap className="w-6 h-6 text-dashboard-card-foreground/80" />
               </div>
               <h3 className="text-lg font-medium text-dashboard-card-foreground mb-2">Tareas programadas para los distintos negocios</h3>
               <p className="text-dashboard-card-foreground/90">

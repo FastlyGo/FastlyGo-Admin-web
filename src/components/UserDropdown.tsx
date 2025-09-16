@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
+import { User, LogOut, ChevronDown } from 'lucide-react';
 
 export const UserDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -35,13 +36,13 @@ export const UserDropdown = () => {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 text-header hover:text-header/80 transition-colors"
+        className="bg-white/15 border border-white/30 px-3 py-2 rounded-lg flex items-center gap-2 cursor-pointer backdrop-blur-sm hover:bg-white/25 transition-colors text-white"
       >
-        <div className="w-10 h-10 bg-header/20 rounded-full flex items-center justify-center border-2 border-black dark:border-white">
-          <span className="text-lg">👤</span>
+        <div className="w-6 h-6 bg-white/30 rounded-full flex items-center justify-center font-bold text-xs">
+          {(user?.name || 'U').charAt(0).toUpperCase()}
         </div>
-        <span className="hidden md:block font-medium">{user?.name || 'Manuel Perez'}</span>
-        <span className="text-lg">▼</span>
+        <span className="hidden md:block font-medium text-sm">{user?.name || 'Usuario'}</span>
+        <ChevronDown className="w-3 h-3" />
       </button>
 
       {isOpen && (
@@ -56,15 +57,15 @@ export const UserDropdown = () => {
               onClick={handleProfileClick}
               className="w-full text-left px-4 py-2 text-sm hover:bg-muted transition-colors flex items-center space-x-2"
             >
-              <span>👤</span>
+              <User className="w-4 h-4" />
               <span>Perfil</span>
             </button>
-            
+
             <button
               onClick={handleLogout}
               className="w-full text-left px-4 py-2 text-sm hover:bg-muted transition-colors flex items-center space-x-2 text-destructive"
             >
-              <span>🚪</span>
+              <LogOut className="w-4 h-4" />
               <span>Cerrar Sesión</span>
             </button>
           </div>

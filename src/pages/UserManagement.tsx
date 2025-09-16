@@ -3,8 +3,11 @@ import { Search, Plus, Users, UserCheck, UserX, Clock, Mail, Phone, MoreVertical
 import { apiService } from '../services/api';
 import type { User, UserStats, PaginatedResponse } from '../services/api';
 import UserModal from './UserModal';
+import { PageHeader } from '../components/PageHeader';
+import { useNavigate } from 'react-router-dom';
 
 export const UserManagement = () => {
+  const navigate = useNavigate();
   const [users, setUsers] = useState<User[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]); // Store all users for client-side pagination
   const [isClientSidePagination, setIsClientSidePagination] = useState(false);
@@ -45,47 +48,64 @@ export const UserManagement = () => {
   const loadUsers = async () => {
     try {
       setIsLoading(true);
+
+      // Primero intentar con paginación del servidor
       const response = await apiService.getAllUsers({
         page: pagination.page,
         pageSize: pagination.pageSize,
         search: searchTerm || undefined,
         role: roleFilter || undefined
       });
+
       console.log('🔍 User API Response:', response);
+
       if (response.success) {
-        // Check if response.data is a paginated response or direct array
         if (Array.isArray(response.data)) {
-          // Backend doesn't support pagination yet, handle as simple array
-          console.log('📝 API returned direct array, implementing client-side pagination');
-          
-          // Apply client-side filtering
-          const filteredUsers = response.data.filter((user: User) => {
-            const matchesSearch = searchTerm === '' || 
+          // El backend devuelve array directo - significa que no soporta paginación aún
+          console.log('⚠️ Backend no soporta paginación, implementando límite para optimizar');
+
+          // Para optimizar, solo tomamos una porción limitada y le decimos al usuario
+          const MAX_DISPLAY_USERS = 50; // Límite para evitar sobrecargar la UI
+
+          // Aplicar filtros primero
+          let filteredUsers = response.data;
+
+          if (searchTerm) {
+            filteredUsers = filteredUsers.filter((user: User) =>
               user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
               user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              user.phone?.toLowerCase().includes(searchTerm.toLowerCase());
-            
-            const matchesRole = roleFilter === '' || user.roles.includes(roleFilter);
-            
-            return matchesSearch && matchesRole;
-          });
-          
-          // Apply client-side pagination
+              user.phone?.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+          }
+
+          if (roleFilter) {
+            filteredUsers = filteredUsers.filter((user: User) =>
+              user.roles.includes(roleFilter)
+            );
+          }
+
+          // Paginación del lado cliente pero con límite
           const startIndex = (pagination.page - 1) * pagination.pageSize;
           const endIndex = startIndex + pagination.pageSize;
           const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
-          
+
           setUsers(paginatedUsers);
           setPagination(prev => ({
             ...prev,
-            totalCount: filteredUsers.length,
-            totalPages: Math.ceil(filteredUsers.length / pagination.pageSize),
-            hasNextPage: endIndex < filteredUsers.length,
+            totalCount: Math.min(filteredUsers.length, MAX_DISPLAY_USERS),
+            totalPages: Math.ceil(Math.min(filteredUsers.length, MAX_DISPLAY_USERS) / pagination.pageSize),
+            hasNextPage: endIndex < Math.min(filteredUsers.length, MAX_DISPLAY_USERS),
             hasPreviousPage: pagination.page > 1
           }));
+
+          // Alertar si hay muchos usuarios
+          if (response.data.length > MAX_DISPLAY_USERS) {
+            console.warn(`⚠️ Se encontraron ${response.data.length} usuarios. Mostrando primeros ${MAX_DISPLAY_USERS} para optimizar rendimiento.`);
+          }
+
         } else {
-          // Backend supports pagination, use server response
-          console.log('📝 API returned paginated response');
+          // El backend soporta paginación real
+          console.log('✅ Usando paginación del servidor');
           setUsers(response.data.data);
           setPagination(prev => ({
             ...prev,
@@ -189,24 +209,24 @@ export const UserManagement = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Header unificado */}
+      <PageHeader
+        franchiseName="User Management"
+        businessType="Manage system users and their roles"
+        onBack={() => navigate('/')}
+        showShare={false}
+        actionButton={{
+          label: 'Add User',
+          onClick: handleAddUser,
+          icon: <Plus className="w-4 h-4" />
+        }}
+      />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">User Management</h1>
-            <p className="text-gray-600">Manage system users and their roles</p>
-          </div>
-          <button
-            onClick={handleAddUser}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-xl hover:from-teal-600 hover:to-teal-700 transition-all duration-200 font-semibold shadow-lg shadow-teal-500/30"
-          >
-            <Plus className="w-5 h-5" />
-            Add User
-          </button>
-        </div>
 
         {/* Search and Filter Bar */}
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+          <div className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
@@ -234,11 +254,12 @@ export const UserManagement = () => {
               <option value="support">Support</option>
             </select>
           </div>
+          </div>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div className="bg-white rounded-xl p-6 shadow-lg">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
                 <UserCheck className="w-6 h-6 text-green-600" />
@@ -250,7 +271,7 @@ export const UserManagement = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div className="bg-white rounded-xl p-6 shadow-lg">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
                 <UserX className="w-6 h-6 text-orange-600" />
@@ -262,7 +283,7 @@ export const UserManagement = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div className="bg-white rounded-xl p-6 shadow-lg">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
                 <Clock className="w-6 h-6 text-blue-600" />
@@ -276,7 +297,7 @@ export const UserManagement = () => {
         </div>
 
         {/* Users Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">

@@ -22,22 +22,20 @@ const ErrorPage = () => (
 
 export const DashBoardRouter = () => {
     return (
-        <>
-            <NavBarHeader>
-                <Routes>
-                    <Route path="/" element={<Dashboard />} />
-                    <Route path="/profile" element={<Profile />} />
-                    <Route path="/franchise-management" element={<FranchiseManagement />} />
-                    <Route path="/sales-report" element={<SalesReport />} />
-                    <Route path="/promotions" element={<Promotions />} />
-                    <Route path="/activity-log" element={<ActivityLog />} />
-                    <Route path="/salary-transfers" element={<SalaryTransfers />} />
-                    <Route path="/user-management" element={<UserManagement />} />
-                    <Route path="/notices-communications" element={<NoticesCommunications />} />
-                    <Route path="/support-reports" element={<SupportReports />} />
-                    <Route path='*' element={<ErrorPage />} />
-                </Routes>
-            </NavBarHeader >
-        </>
+        <div className="min-h-screen bg-gray-50">
+            <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/franchise-management" element={<FranchiseManagement />} />
+                <Route path="/sales-report" element={<SalesReport />} />
+                <Route path="/promotions" element={<Promotions />} />
+                <Route path="/activity-log" element={<ActivityLog />} />
+                <Route path="/salary-transfers" element={<SalaryTransfers />} />
+                <Route path="/user-management" element={<UserManagement />} />
+                <Route path="/notices-communications" element={<NoticesCommunications />} />
+                <Route path="/support-reports" element={<SupportReports />} />
+                <Route path='*' element={<ErrorPage />} />
+            </Routes>
+        </div>
     )
 }

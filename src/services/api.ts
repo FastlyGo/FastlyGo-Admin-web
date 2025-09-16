@@ -770,6 +770,137 @@ export interface PaginatedResponse<T> {
   hasPreviousPage: boolean;
 }
 
+// Franchise Report interfaces
+export interface FranchiseReportData {
+  business: {
+    id: string;
+    name: string;
+    businessType: string;
+  };
+  metrics: {
+    totalSales: string;
+    totalOrders: number;
+    uniqueCustomers: number;
+    averagePerDay: string;
+    trend: string;
+  };
+  chartData: Array<{
+    label: string;
+    value: number;
+    displayValue: string;
+  }>;
+  recentTransactions: Array<{
+    date: string;
+    product: string;
+    category: string;
+    quantity: number;
+    price: string;
+    total: string;
+  }>;
+  period: {
+    startDate: string;
+    endDate: string;
+  };
+}
+
+export interface BusinessForReport {
+  id: string;
+  name: string;
+  businessTypeName: string;
+  isActive: boolean;
+}
+
+// Delivery Person interfaces
+export interface DeliveryPerson {
+  id: string;
+  userId: string;
+  userName: string;
+  email: string;
+  licenseNumber: string;
+  licenseExpiryDate: string;
+  rating?: number;
+  maxActiveDeliveries: number;
+  currentLat?: number;
+  currentLng?: number;
+  isActive: boolean;
+  isOnline: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface CreateDeliveryPersonRequest {
+  userId: string;
+  licenseNumber: string;
+  licenseExpiryDate: string;
+  rating?: number;
+  maxActiveDeliveries: number;
+  currentLat?: number;
+  currentLng?: number;
+  isActive: boolean;
+  isOnline: boolean;
+}
+
+export interface UpdateDeliveryPersonRequest {
+  licenseNumber: string;
+  licenseExpiryDate: string;
+  rating?: number;
+  maxActiveDeliveries: number;
+  currentLat?: number;
+  currentLng?: number;
+  isActive: boolean;
+  isOnline: boolean;
+}
+
+// Banner interfaces
+export interface Banner {
+  id: string;
+  title: string;
+  description?: string;
+  imageUrl: string;
+  actionUrl?: string;
+  businessId?: string;
+  startDate: string;
+  endDate: string;
+  isActive: boolean;
+  priority: number;
+  createdBy?: string;
+  createdAt: string;
+  updatedAt: string;
+  cloudinaryPublicId?: string;
+}
+
+export interface CreateBannerRequest {
+  title: string;
+  description?: string;
+  actionUrl?: string;
+  businessId?: string;
+  startDate: string;
+  endDate: string;
+  priority: number;
+  imageFile: File;
+}
+
+export interface UpdateBannerRequest {
+  id: string;
+  title: string;
+  description?: string;
+  actionUrl?: string;
+  businessId?: string;
+  startDate: string;
+  endDate: string;
+  priority: number;
+  imageFile?: File;
+}
+
+export interface BannerStats {
+  totalBanners: number;
+  activeBanners: number;
+  inactiveBanners: number;
+  currentActiveBanners: number;
+  expiredBanners: number;
+  scheduledBanners: number;
+}
+
 class ApiService {
   private api: AxiosInstance;
   private readonly BASE_URL = import.meta.env.VITE_API_URL || 'https://localhost:7283';
@@ -1080,11 +1211,11 @@ class ApiService {
   // ==========================================
 
   /**
-   * GET /api/admin/User
+   * GET /api/admin/UserControllerPaginated/paginated
    * Obtiene todos los usuarios con paginación
    */
   async getAllUsers(params?: PaginationParams): Promise<ApiResponse<PaginatedResponse<User> | User[]>> {
-    return this.get<PaginatedResponse<User> | User[]>('/api/admin/User', params);
+    return this.get<PaginatedResponse<User> | User[]>('/api/admin/UserControllerPaginated/paginated', params);
   }
 
   /**
@@ -1145,11 +1276,11 @@ class ApiService {
   }
 
   /**
-   * GET /api/admin/User/stats
+   * GET /api/admin/UserControllerPaginated/stats
    * Obtiene estadísticas de los usuarios
    */
   async getUserStats(): Promise<ApiResponse<UserStats>> {
-    return this.get<UserStats>('/api/admin/User/stats');
+    return this.get<UserStats>('/api/admin/UserControllerPaginated/stats');
   }
 
   /**
@@ -1158,6 +1289,185 @@ class ApiService {
    */
   async getMerchantUsers(): Promise<ApiResponse<MerchantUser[]>> {
     return this.get<MerchantUser[]>('/api/admin/User/merchants');
+  }
+
+  // ==========================================
+  // MÉTODOS PARA FRANCHISE REPORT
+  // ==========================================
+
+  /**
+   * GET /api/admin/FranchiseReport/{businessId}
+   * Obtiene el reporte de ventas de una franquicia
+   */
+  async getFranchiseSalesReport(
+    businessId: string,
+    startDate?: string,
+    endDate?: string
+  ): Promise<ApiResponse<FranchiseReportData>> {
+    const params: any = {};
+    if (startDate) params.startDate = startDate;
+    if (endDate) params.endDate = endDate;
+
+    return this.get<FranchiseReportData>(`/api/admin/FranchiseReport/${businessId}`, params);
+  }
+
+  /**
+   * GET /api/admin/FranchiseReport/businesses
+   * Obtiene la lista de franquicias para reportes
+   */
+  async getBusinessesForReports(): Promise<ApiResponse<BusinessForReport[]>> {
+    return this.get<BusinessForReport[]>('/api/admin/FranchiseReport/businesses');
+  }
+
+  // ==========================================
+  // MÉTODOS PARA DELIVERY PERSON
+  // ==========================================
+
+  /**
+   * GET /api/admin/DeliveryPerson
+   * Obtiene todos los delivery persons con paginación
+   */
+  async getAllDeliveryPersons(params?: PaginationParams): Promise<ApiResponse<PaginatedResponse<DeliveryPerson> | DeliveryPerson[]>> {
+    return this.get<PaginatedResponse<DeliveryPerson> | DeliveryPerson[]>('/api/admin/DeliveryPerson', params);
+  }
+
+  /**
+   * POST /api/admin/DeliveryPerson
+   * Crea un nuevo delivery person
+   */
+  async createDeliveryPerson(deliveryPersonData: CreateDeliveryPersonRequest): Promise<ApiResponse<DeliveryPerson>> {
+    return this.post<DeliveryPerson>('/api/admin/DeliveryPerson', deliveryPersonData);
+  }
+
+  /**
+   * GET /api/admin/DeliveryPerson/{id}
+   * Obtiene un delivery person específico por ID
+   */
+  async getDeliveryPersonById(id: string): Promise<ApiResponse<DeliveryPerson>> {
+    return this.get<DeliveryPerson>(`/api/admin/DeliveryPerson/${id}`);
+  }
+
+  /**
+   * PUT /api/admin/DeliveryPerson/{id}
+   * Actualiza un delivery person específico
+   */
+  async updateDeliveryPerson(id: string, deliveryPersonData: UpdateDeliveryPersonRequest): Promise<ApiResponse<DeliveryPerson>> {
+    return this.put<DeliveryPerson>(`/api/admin/DeliveryPerson/${id}`, deliveryPersonData);
+  }
+
+  // ==========================================
+  // MÉTODOS PARA BANNERS (PROMOTIONS)
+  // ==========================================
+
+  /**
+   * GET /api/Banners/paginated
+   * Obtiene todos los banners con paginación
+   */
+  async getAllBanners(params?: PaginationParams): Promise<ApiResponse<PaginatedResponse<Banner> | Banner[]>> {
+    return this.get<PaginatedResponse<Banner> | Banner[]>('/api/Banners/paginated', params);
+  }
+
+  /**
+   * GET /api/Banners/stats
+   * Obtiene estadísticas de los banners
+   */
+  async getBannerStats(): Promise<ApiResponse<BannerStats>> {
+    return this.get<BannerStats>('/api/Banners/stats');
+  }
+
+  /**
+   * GET /api/Banners/{id}
+   * Obtiene un banner específico por ID
+   */
+  async getBannerById(id: string): Promise<ApiResponse<Banner>> {
+    return this.get<Banner>(`/api/Banners/${id}`);
+  }
+
+  /**
+   * POST /api/Banners
+   * Crea un nuevo banner
+   */
+  async createBanner(bannerData: CreateBannerRequest): Promise<ApiResponse<Banner>> {
+    const formData = new FormData();
+    formData.append('Title', bannerData.title);
+    if (bannerData.description) {
+      formData.append('Description', bannerData.description);
+    }
+    if (bannerData.actionUrl) {
+      formData.append('ActionUrl', bannerData.actionUrl);
+    }
+    if (bannerData.businessId) {
+      formData.append('BusinessId', bannerData.businessId);
+    }
+    formData.append('StartDate', bannerData.startDate);
+    formData.append('EndDate', bannerData.endDate);
+    formData.append('Priority', bannerData.priority.toString());
+    formData.append('ImageFile', bannerData.imageFile);
+
+    return this.request<Banner>('/api/Banners', {
+      method: 'POST',
+      data: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  }
+
+  /**
+   * PUT /api/Banners/{id}
+   * Actualiza un banner específico
+   */
+  async updateBanner(id: string, bannerData: UpdateBannerRequest): Promise<ApiResponse<Banner>> {
+    const formData = new FormData();
+    formData.append('Id', bannerData.id);
+    formData.append('Title', bannerData.title);
+    if (bannerData.description) {
+      formData.append('Description', bannerData.description);
+    }
+    if (bannerData.actionUrl) {
+      formData.append('ActionUrl', bannerData.actionUrl);
+    }
+    if (bannerData.businessId) {
+      formData.append('BusinessId', bannerData.businessId);
+    }
+    formData.append('StartDate', bannerData.startDate);
+    formData.append('EndDate', bannerData.endDate);
+    formData.append('Priority', bannerData.priority.toString());
+    if (bannerData.imageFile) {
+      formData.append('ImageFile', bannerData.imageFile);
+    }
+
+    return this.request<Banner>(`/api/Banners/${id}`, {
+      method: 'PUT',
+      data: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  }
+
+  /**
+   * DELETE /api/Banners/{id}
+   * Elimina un banner específico
+   */
+  async deleteBanner(id: string): Promise<ApiResponse<void>> {
+    return this.delete<void>(`/api/Banners/${id}`);
+  }
+
+  /**
+   * GET /api/Banners/active
+   * Obtiene banners activos actuales
+   */
+  async getActiveBanners(): Promise<ApiResponse<Banner[]>> {
+    return this.get<Banner[]>('/api/Banners/active');
+  }
+
+  /**
+   * POST /api/Banners/disable-expired
+   * Deshabilita banners expirados
+   */
+  async disableExpiredBanners(): Promise<ApiResponse<{ message: string; count: number }>> {
+    return this.post<{ message: string; count: number }>('/api/Banners/disable-expired');
   }
 }
 

@@ -4,40 +4,45 @@
 
 :root {
     --background: 0 0% 100%;
-    --foreground: 0 0% 0%;
-    /* Negro en modo claro */
+    --foreground: 210 20% 15%;
+    /* #1A202C - Dark text */
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 0%;
-    /* Negro en modo claro */
-    --primary: 175 100% 38%;
-    /* #00C4B4 */
+    --card-foreground: 210 20% 15%;
+    /* #1A202C - Dark text for cards */
+    --primary: 174 100% 42%;
+    /* #00D4AA - Primary turquoise */
+    --primary-light: 174 89% 55%;
+    /* #1EEBC7 - Light turquoise for gradients */
     --primary-foreground: 0 0% 100%;
-    /* Blanco para texto sobre #00C4B4 */
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 0 0% 0%;
-    /* Negro en modo claro */
+    /* White text on turquoise */
+    --secondary: 210 40% 97%;
+    /* #F8F9FA - Light background */
+    --secondary-foreground: 210 20% 15%;
+    /* Dark text */
     --muted: 210 40% 96%;
-    --muted-foreground: 75 85% 60%;
-    /* Color más oscuro para texto muted */
+    --muted-foreground: 215 15% 45%;
+    /* #64748B - Gray text */
     --accent: 210 40% 96%;
-    --accent-foreground: 0 0% 0%;
-    /* Negro en modo claro */
+    --accent-foreground: 210 20% 15%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
+    /* #E2E8F0 - Light border */
     --input: 214.3 31.8% 91.4%;
-    --ring: 175 100% 38%;
-    /* #00C4B4 */
-    --dashboard-card: 175 100% 38%;
-    /* #00C4B4 para tarjetas en modo claro */
-    --dashboard-card-foreground: 0 0% 100%;
-    /* Blanco para texto en tarjetas */
-    --header-bg: 175 100% 38%;
-    /* #00C4B4 para header en modo claro */
+    --ring: 174 100% 42%;
+    /* Primary turquoise for focus rings */
+    --dashboard-card: 0 0% 100%;
+    /* White cards with shadow */
+    --dashboard-card-foreground: 210 20% 15%;
+    /* Dark text on white cards */
+    --header-bg: 174 100% 42%;
+    /* #00D4AA gradient start */
+    --header-bg-end: 174 89% 55%;
+    /* #1EEBC7 gradient end */
     --header-text: 0 0% 100%;
-    /* Blanco para texto del header */
+    /* White text on turquoise header */
     --header-icon: 0 0% 100%;
-    /* Blanco para iconos del header */
+    /* White icons on turquoise header */
 }
 
 .dark {
