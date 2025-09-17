@@ -27,10 +27,10 @@ export const CustomBarChart = ({
 
   // Generate Y-axis labels
   const yAxisLabels = [
-    `€${(chartMaxValue / 1000).toFixed(0)}k`,
-    `€${((chartMaxValue * 0.75) / 1000).toFixed(1)}k`,
-    `€${((chartMaxValue * 0.5) / 1000).toFixed(1)}k`,
-    '€0'
+    `$${(chartMaxValue / 1000).toFixed(0)}k`,
+    `$${((chartMaxValue * 0.75) / 1000).toFixed(1)}k`,
+    `$${((chartMaxValue * 0.5) / 1000).toFixed(1)}k`,
+    '$0'
   ];
 
   useEffect(() => {

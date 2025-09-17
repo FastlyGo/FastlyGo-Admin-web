@@ -196,7 +196,7 @@ export const SalesReport = () => {
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <MetricCard
                       title="Ventas Totales"
-                      value="€0"
+                      value="$0"
                       icon={<DollarSign className="w-6 h-6" />}
                       trend="0%"
                     />
@@ -214,7 +214,7 @@ export const SalesReport = () => {
                     />
                     <MetricCard
                       title="Promedio/Día"
-                      value="€0"
+                      value="$0"
                       icon={<Calendar className="w-6 h-6" />}
                       trend="0%"
                     />

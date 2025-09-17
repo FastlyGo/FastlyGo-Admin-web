@@ -57,7 +57,7 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('auth-token');
-      window.location.href = '/login';
+      window.location.href = '/auth/login';
     }
     return Promise.reject(error);
   }
@@ -65,19 +65,46 @@ api.interceptors.response.use(
 
 export const useAuthStore = create<AuthStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       // Estado inicial
       user: null,
       token: null,
       isAuthenticated: false,
-      isLoading: false,
+      isLoading: true, // Iniciar como loading hasta verificar localStorage
       error: null,
 
       // Acciones
       login: async (email: string, password: string) => {
         set({ isLoading: true, error: null });
-        
+
         try {
+          // Demo credentials for testing
+          if (email === 'admin@fastlygo.com' && password === 'admin123') {
+            const demoUser = {
+              id: 'demo-admin-001',
+              email: 'admin@fastlygo.com',
+              name: 'Administrador Demo',
+              role: 'admin'
+            };
+            const demoToken = 'demo-token-' + Date.now();
+
+            // Simular delay de red
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            // Guardar token en localStorage
+            localStorage.setItem('auth-token', demoToken);
+
+            set({
+              user: demoUser,
+              token: demoToken,
+              isAuthenticated: true,
+              isLoading: false,
+              error: null,
+            });
+            return;
+          }
+
+          // Intentar autenticación real con API
           const response = await api.post('/api/Auth/login', {
             email,
             password,
@@ -88,10 +115,10 @@ export const useAuthStore = create<AuthStore>()(
           }
 
           const { user, token } = response.data;
-          
+
           // Guardar token en localStorage
           localStorage.setItem('auth-token', token);
-          
+
           set({
             user,
             token,
@@ -100,14 +127,15 @@ export const useAuthStore = create<AuthStore>()(
             error: null,
           });
         } catch (error: any) {
-          let errorMessage = 'Error al iniciar sesión';
-          
-          if (error.response?.data?.message) {
+          let errorMessage = 'Credenciales inválidas';
+
+          // Si no es error de red, mostrar mensaje específico
+          if (error.code !== 'ERR_NETWORK' && error.response?.data?.message) {
             errorMessage = error.response.data.message;
-          } else if (error.message) {
+          } else if (error.message && !error.message.includes('Network Error')) {
             errorMessage = error.message;
           }
-          
+
           set({
             isLoading: false,
             error: errorMessage,
@@ -187,6 +215,22 @@ export const useAuthStore = create<AuthStore>()(
         token: state.token,
         isAuthenticated: state.isAuthenticated,
       }),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          // Verificar si hay token en localStorage
+          const token = localStorage.getItem('auth-token');
+          if (token && state.user) {
+            state.isAuthenticated = true;
+            state.token = token;
+          } else {
+            state.isAuthenticated = false;
+            state.user = null;
+            state.token = null;
+            localStorage.removeItem('auth-token');
+          }
+          state.isLoading = false;
+        }
+      },
     }
   )
 );

@@ -75,7 +75,7 @@ export const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <MetricCard
             title="Total Sales"
-            value="€12,400"
+            value="$12,400"
             trend="+12% this week"
           />
           <MetricCard
